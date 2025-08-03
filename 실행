@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>선 긋기 문제</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    canvas { border: 1px solid #ccc; display: block; margin-bottom: 20px; }
+    input, button { padding: 8px; margin-right: 5px; }
+  </style>
+</head>
+<body>
+  <h2>선 긋기 문제</h2>
+  <p>점 인덱스: 0, 1, 2, 3</p>
+  <canvas id="canvas" width="400" height="200"></canvas>
+
+  <label for="connections">연결 (예: 0-2,1-3):</label>
+  <input type="text" id="connections" value="0-2,1-3" />
+  <button onclick="drawLines()">선 그리기</button>
+
+  <script>
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+
+    const points = [
+      { x: 50, y: 100 },
+      { x: 150, y: 50 },
+      { x: 250, y: 150 },
+      { x: 350, y: 100 }
+    ];
+
+    function drawPoints() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      points.forEach((p, idx) => {
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 5, 0, 2 * Math.PI);
+        ctx.fillStyle = "#000";
+        ctx.fill();
+        ctx.fillText(idx, p.x - 5, p.y - 10);
+      });
+    }
+
+    function linesIntersect(p1, p2, p3, p4) {
+      function ccw(a, b, c) {
+        return (c.y - a.y) * (b.x - a.x) > (b.y - a.y) * (c.x - a.x);
+      }
+      return ccw(p1, p3, p4) !== ccw(p2, p3, p4) && ccw(p1, p2, p3) !== ccw(p1, p2, p4);
+    }
+
+    function drawLines() {
+      drawPoints();
+
+      const input = document.getElementById("connections").value;
+      const pairs = input.split(",").map(s => s.trim().split("-").map(Number));
+      
+      const isCrossing = Array(pairs.length).fill(false);
+      for (let i = 0; i < pairs.length; i++) {
+        for (let j = i + 1; j < pairs.length; j++) {
+          const [a1, a2] = pairs[i];
+          const [b1, b2] = pairs[j];
+          if (linesIntersect(points[a1], points[a2], points[b1], points[b2])) {
+            isCrossing[i] = true;
+            isCrossing[j] = true;
+          }
+        }
+      }
+
+      pairs.forEach(([from, to], idx) => {
+        const p1 = points[from];
+        const p2 = points[to];
+        ctx.beginPath();
+        ctx.moveTo(p1.x, p1.y);
+        ctx.lineTo(p2.x, p2.y);
+        ctx.strokeStyle = isCrossing[idx] ? "red" : "blue";
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      });
+    }
+
+    drawPoints();
+  </script>
+</body>
+</html>
